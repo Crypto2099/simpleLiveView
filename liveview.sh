@@ -31,6 +31,7 @@ do
   slotnum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_slotNum_int )[0-9]+' <<< "${data}")
   uptimens=$(grep -oP '(?<=cardano_node_metrics_upTime_ns )[0-9]+' <<< "${data}")
   density=$(grep -oP '(?<=cardano_node_ChainDB_metrics_density_real )[0-9]+' <<< "${data}")
+  transactions=$(grep -oP '(?<=cardano_node_metrics_txsProcessedNum_int )[0-9]+' <<< "${data}")
   kesperiod=$(grep -oP '(?<=cardano_node_Forge_metrics_currentKESPeriod_int )[0-9]+' <<< "${data}")
   kesremain=$(grep -oP '(?<=cardano_node_Forge_metrics_remainingKESPeriods_int )[0-9]+' <<< "${data}")
   isleader=$(grep -oP '(?<=cardano_node_metrics_Forge_node_is_leader_int )[0-9]+' <<< "${data}")
@@ -40,6 +41,7 @@ do
   peers=$(printf "%14s" "$peers")
   epoch=$(printf "%14s" "$epochnum / $blocknum")
   slot=$(printf "%14s" "$slotnum")
+  txcount=$(printf "%14s" "$transactions")
 
   if [[ isleader -lt 0 ]]; then
     isleader=0
@@ -88,6 +90,8 @@ do
   echo -e "| Slot                | ${slot} |"
   echo -e '+---------------------+----------------+'
   echo -e "| Uptime              | ${uptime} |"
+  echo -e '+---------------------+----------------+'
+  echo -e "| Transactions        | ${txcount} |"
   echo -e '+---------------------+----------------+'
   if [[ $abouttolead -gt 0 ]]; then
     kesperiod=$(printf "%14s" "$kesperiod")
