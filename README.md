@@ -17,7 +17,11 @@ cd simpleLiveView
 
 ### Attribution
 Author: Adam Dean (Twitter: @adamkdean)
+
 Created By: Crypto2099, Corp
+
 Twitter: https://twitter.com/Crypto2099Corp
+
 Homepage: https://crypto2099.io
+
 Cardano Stake Pools: BUFFY | SPIKE
