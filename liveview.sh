@@ -11,6 +11,13 @@
 promport=12798 # You may need to change this to match your configuration
 refreshrate=2 # How often (in seconds) to refresh the view
 
+version=$("$(command -v cardano-node)" version)
+node_version=$(grep -oP '(?<=cardano-node )[0-9\.]+' <<< "${version}")
+node_rev=$(grep -oP '(?<=rev )[a-z0-9]+' <<< "${version}" | cut -c1-8)
+
+node_version=$(printf "%14s" "$node_version")
+node_rev=$(printf "%14s" "$node_rev")
+
 # Add some colors for "Felegance" (Fancy Elegance)
 REKT='\033[1;31m'
 GOOD='\033[0;32m'
@@ -19,11 +26,7 @@ INFO='\033[1;34m'
 
 while true
 do
-#  data=$(curl -s "localhost:${promport}/metrics")
   data=$(curl localhost:12798/metrics 2>/dev/null)
-
-#  peers=$(grep -oP '(?<=cardano-node_BlockFetchDecision_peers_connectedPeers_int )[0-9]+' <<< "$data")
-
 
   peers=$(grep -oP '(?<=cardano_node_BlockFetchDecision_peers_connectedPeers_int )[0-9]+' <<< "${data}")
   blocknum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_blockNum_int )[0-9]+' <<< "${data}")
@@ -82,6 +85,10 @@ do
   clear
   echo -e '+--------------------------------------+'
   echo -e '|   Simple Node Stats by Crypto2099    |'
+  echo -e '+---------------------+----------------+'
+  echo -e "| Version             | ${INFO}${node_version}${NC} |"
+  echo -e '+---------------------+----------------+'
+  echo -e "| Revision            | ${INFO}${node_rev}${NC} |"
   echo -e '+---------------------+----------------+'
   echo -e "| Peers               | ${peers} |"
   echo -e '+---------------------+----------------+'
