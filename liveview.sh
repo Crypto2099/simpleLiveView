@@ -8,7 +8,7 @@
 # Cardano Stake Pools: BUFFY | SPIKE
 ##
 
-promport=12798 # You may need to change this to match your configuration
+promport=12799 # You may need to change this to match your configuration
 refreshrate=2 # How often (in seconds) to refresh the view
 
 version=$("$(command -v cardano-node)" version)
@@ -26,7 +26,7 @@ INFO='\033[1;34m'
 
 while true
 do
-  data=$(curl localhost:12798/metrics 2>/dev/null)
+  data=$(curl localhost:$promport/metrics 2>/dev/null)
 
   peers=$(grep -oP '(?<=cardano_node_BlockFetchDecision_peers_connectedPeers_int )[0-9]+' <<< "${data}")
   blocknum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_blockNum_int )[0-9]+' <<< "${data}")
@@ -40,6 +40,11 @@ do
   isleader=$(grep -oP '(?<=cardano_node_metrics_Forge_node_is_leader_int )[0-9]+' <<< "${data}")
   abouttolead=$(grep -oP '(?<=cardano_node_metrics_Forge_forge_about_to_lead_int )[0-9]+' <<< "${data}")
   forged=$(grep -oP '(?<=cardano_node_metrics_Forge_forged_int )[0-9]+' <<< "${data}")
+
+  if ((uptimens<=0)); then
+    echo -e "${REKT}COULD NOT CONNECT TO A RUNNING INSTANCE! PLEASE CHECK THE PROMETHEUS PORT AND TRY AGAIN!${NC}"
+    exit
+  fi
 
   peers=$(printf "%14s" "$peers")
   epoch=$(printf "%14s" "$epochnum / $blocknum")
