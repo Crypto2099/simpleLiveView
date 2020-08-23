@@ -8,7 +8,7 @@
 # Cardano Stake Pools: BUFFY | SPIKE
 ##
 
-promport=12799 # You may need to change this to match your configuration
+promport=12798 # You may need to change this to match your configuration
 refreshrate=2 # How often (in seconds) to refresh the view
 
 version=$("$(command -v cardano-node)" version)
