@@ -10,6 +10,8 @@
 
 promport=12798 # You may need to change this to match your configuration
 refreshrate=2 # How often (in seconds) to refresh the view
+cardanoport=3001 # You may need to change this to match your configuration
+nodename="" # You can add your node's name here, 30 character limit!!!
 
 version=$("$(command -v cardano-node)" version)
 node_version=$(grep -oP '(?<=cardano-node )[0-9\.]+' <<< "${version}")
@@ -17,8 +19,9 @@ node_rev=$(grep -oP '(?<=rev )[a-z0-9]+' <<< "${version}" | cut -c1-8)
 
 node_version=$(printf "%14s" "$node_version")
 node_rev=$(printf "%14s" "$node_rev")
+name=$(printf "%*s\n" $((36)) "$nodename")
 
-# Add some colors for "Felegance" (Fancy Elegance)
+# Add some colors 
 REKT='\033[1;31m'
 GOOD='\033[0;32m'
 NC='\033[0m'
@@ -27,7 +30,7 @@ INFO='\033[1;34m'
 while true
 do
   data=$(curl localhost:$promport/metrics 2>/dev/null)
-
+  remotepeers=$(netstat -an|awk "\$4 ~ /${cardanoport}/"|grep -c ESTABLISHED)
   peers=$(grep -oP '(?<=cardano_node_BlockFetchDecision_peers_connectedPeers_int )[0-9]+' <<< "${data}")
   blocknum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_blockNum_int )[0-9]+' <<< "${data}")
   epochnum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_epoch_int )[0-9]+' <<< "${data}")
@@ -46,7 +49,8 @@ do
     exit
   fi
 
-  peers=$(printf "%14s" "$peers")
+#  remotepeers=$(printf "%14s" "$remotepeers")
+  peers=$(printf "%14s" "$peers / $remotepeers")
   epoch=$(printf "%14s" "$epochnum / $blocknum")
   slot=$(printf "%14s" "$slotnum")
   txcount=$(printf "%14s" "$transactions")
@@ -91,12 +95,17 @@ do
   echo -e '+--------------------------------------+'
   echo -e '|   Simple Node Stats by Crypto2099    |'
   echo -e '+---------------------+----------------+'
+  if [[ ! -z "$nodename" ]]; then
+    name=$(printf "%30s" "${nodename}")
+    echo -e "| Name: ${INFO}${name}${NC} |"
+    echo -e '+---------------------+----------------+'
+  fi
   echo -e "| Version             | ${INFO}${node_version}${NC} |"
   echo -e '+---------------------+----------------+'
   echo -e "| Revision            | ${INFO}${node_rev}${NC} |"
   echo -e '+---------------------+----------------+'
-  echo -e "| Peers               | ${peers} |"
-  echo -e '+---------------------+----------------+'
+  echo -e "| Peers (Out / In)    | ${peers} |"
+  echo -e "+---------------------+----------------+"
   echo -e "| Epoch / Block       | ${epoch} |"
   echo -e '+---------------------+----------------+'
   echo -e "| Slot                | ${slot} |"
