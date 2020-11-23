@@ -35,7 +35,7 @@ do
   blocknum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_blockNum_int )[0-9]+' <<< "${data}")
   epochnum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_epoch_int )[0-9]+' <<< "${data}")
   slotnum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_slotNum_int )[0-9]+' <<< "${data}")
-  uptimens=$(grep -oP '(?<=cardano_node_metrics_upTime_ns )[0-9]+' <<< "${data}")
+  uptimens=$(grep -oP '(?<=rts_gc_wall_ms )[0-9]+' <<< "${data}")
   density=$(grep -oP '(?<=cardano_node_ChainDB_metrics_density_real )[0-9]+' <<< "${data}")
   transactions=$(grep -oP '(?<=cardano_node_metrics_txsProcessedNum_int )[0-9]+' <<< "${data}")
   kesperiod=$(grep -oP '(?<=cardano_node_Forge_metrics_currentKESPeriod_int )[0-9]+' <<< "${data}")
@@ -60,7 +60,7 @@ do
     forged=0
   fi
 
-  uptimes=$(($uptimens / 1000000000))
+  uptimes=$(($uptimens / 1000))
   min=0
   hour=0
   day=0
