@@ -21,7 +21,10 @@ node_version=$(printf "%14s" "$node_version")
 node_rev=$(printf "%14s" "$node_rev")
 name=$(printf "%*s\n" $((36)) "$nodename")
 
-# Add some colors 
+# Version check courtesy of Martin [ATADA] Cardano Node Operator Scripts (https://github.com/gitmachtl/scripts)
+versionCheck() { printf '%s\n%s' "${1}" "${2}" | sort -C -V; } #$1=minimal_needed_version, $2=current_node_version
+
+# Add some colors
 REKT='\033[1;31m'
 GOOD='\033[0;32m'
 NC='\033[0m'
@@ -31,18 +34,33 @@ while true
 do
   data=$(curl localhost:$promport/metrics 2>/dev/null)
   remotepeers=$(netstat -an|awk "\$4 ~ /${cardanoport}/"|grep -c ESTABLISHED)
-  peers=$(grep -oP '(?<=cardano_node_BlockFetchDecision_peers_connectedPeers_int )[0-9]+' <<< "${data}")
-  blocknum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_blockNum_int )[0-9]+' <<< "${data}")
-  epochnum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_epoch_int )[0-9]+' <<< "${data}")
-  slotnum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_slotNum_int )[0-9]+' <<< "${data}")
+
   uptimens=$(grep -oP '(?<=rts_gc_wall_ms )[0-9]+' <<< "${data}")
-  density=$(grep -oP '(?<=cardano_node_ChainDB_metrics_density_real )[0-9]+' <<< "${data}")
   transactions=$(grep -oP '(?<=cardano_node_metrics_txsProcessedNum_int )[0-9]+' <<< "${data}")
-  kesperiod=$(grep -oP '(?<=cardano_node_Forge_metrics_currentKESPeriod_int )[0-9]+' <<< "${data}")
-  kesremain=$(grep -oP '(?<=cardano_node_Forge_metrics_remainingKESPeriods_int )[0-9]+' <<< "${data}")
   isleader=$(grep -oP '(?<=cardano_node_metrics_Forge_node_is_leader_int )[0-9]+' <<< "${data}")
   abouttolead=$(grep -oP '(?<=cardano_node_metrics_Forge_forge_about_to_lead_int )[0-9]+' <<< "${data}")
   forged=$(grep -oP '(?<=cardano_node_metrics_Forge_forged_int )[0-9]+' <<< "${data}")
+
+  versionCheck $node_version '1.25.0'
+
+  if [[ $? -ne 0 ]]; then
+    peers=$(grep -oP '(?<=cardano_node_BlockFetchDecision_peers_connectedPeers_int )[0-9]+' <<< "${data}")
+    blocknum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_blockNum_int )[0-9]+' <<< "${data}")
+    epochnum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_epoch_int )[0-9]+' <<< "${data}")
+    slotnum=$(grep -oP '(?<=cardano_node_ChainDB_metrics_slotNum_int )[0-9]+' <<< "${data}")
+    density=$(grep -oP '(?<=cardano_node_ChainDB_metrics_density_real )[0-9e\.\-]+' <<< "${data}")
+    kesperiod=$(grep -oP '(?<=cardano_node_Forge_metrics_currentKESPeriod_int )[0-9]+' <<< "${data}")
+    kesremain=$(grep -oP '(?<=cardano_node_Forge_metrics_remainingKESPeriods_int )[0-9]+' <<< "${data}")
+  else
+    peers=$(grep -oP '(?<=cardano_node_metrics_connectedPeers_int )[0-9]+' <<< "${data}")
+    blocknum=$(grep -oP '(?<=cardano_node_metrics_blockNum_int )[0-9]+' <<< "${data}")
+    epochnum=$(grep -oP '(?<=cardano_node_metrics_epoch_int )[0-9]+' <<< "${data}")
+    slotnum=$(grep -oP '(?<=cardano_node_metrics_slotNum_int )[0-9]+' <<< "${data}")
+    density=$(grep -oP '(?<=cardano_node_metrics_density_real )[0-9e\.\-]+' <<< "${data}")
+    kesperiod=$(grep -oP '(?<=cardano_node_metrics_currentKESPeriod_int )[0-9]+' <<< "${data}")
+    kesremain=$(grep -oP '(?<=cardano_node_metrics_remainingKESPeriods_int )[0-9]+' <<< "${data}")
+  fi;
+
 
   if ((uptimens<=0)); then
     echo -e "${REKT}COULD NOT CONNECT TO A RUNNING INSTANCE! PLEASE CHECK THE PROMETHEUS PORT AND TRY AGAIN!${NC}"
@@ -54,6 +72,11 @@ do
   epoch=$(printf "%14s" "$epochnum / $blocknum")
   slot=$(printf "%14s" "$slotnum")
   txcount=$(printf "%14s" "$transactions")
+  density_science=$(printf "%14s" "${density}")
+  density_float=$(printf "%.4f" "${density}")
+  density_percent=$(bc <<< "${density_float}*100")
+  real_density=$(printf "%.3f" "${density_percent}")
+  density=$(printf "%13s%%" "${real_density}")
 
   if [[ isleader -lt 0 ]]; then
     isleader=0
@@ -113,6 +136,8 @@ do
   echo -e "| Uptime (D:H:M:S)    | ${uptime} |"
   echo -e '+---------------------+----------------+'
   echo -e "| Transactions        | ${txcount} |"
+  echo -e '+---------------------+----------------+'
+  echo -e "| Chain Density       | ${density} |"
   echo -e '+---------------------+----------------+'
   if [[ $abouttolead -gt 0 ]]; then
     kesperiod=$(printf "%14s" "$kesperiod")
