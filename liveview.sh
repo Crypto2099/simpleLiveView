@@ -41,7 +41,7 @@ do
   abouttolead=$(grep -oP '(?<=cardano_node_metrics_Forge_forge_about_to_lead_int )[0-9]+' <<< "${data}")
   forged=$(grep -oP '(?<=cardano_node_metrics_Forge_forged_int )[0-9]+' <<< "${data}")
 
-  versionCheck $node_version '1.25.0'
+  versionCheck '1.25.0' $node_version
 
   if [[ $? -ne 0 ]]; then
     peers=$(grep -oP '(?<=cardano_node_BlockFetchDecision_peers_connectedPeers_int )[0-9]+' <<< "${data}")
